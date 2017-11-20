@@ -1,79 +1,26 @@
-var mongoose = require('mongoose');
+const express = require('express');
+const bodyParser = require('body-parser');
 
-mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost:27017/TodoApp');
+const {mongoose} = require('./db/mongoose');
+const {Todo} = require('./models/todo');
+const {User} = require('./models/user');
 
-var Todo = mongoose.model('Todo',{
-    text:{
-        type:String,
-        required:true,
-        minlength:1,
-        trim:true
-    },
-    completed:{
-        type:Boolean,
-        default:false
-    },
-    completedAt:{
-        type:Number,
-        default:null
-    }
-});
+var app = express();
 
-var newTodo = new Todo({
-    text:'Cook Dinner'
-});
+app.use(bodyParser.json());
+app.post('/todos', (req, res) =>{
+    var todo = new Todo({
+        text: req.body.text
+    });
 
-newTodo.save().then((doc) => {
-    console.log('Saved todo ', doc);
-},(e) =>{
-    console.log('Unable to save todo ', e)
-});
-
-var anotherTodo = new Todo({
-    text:'Feed the cat',
-    completed:true,
-    completedAt:123
+    todo.save().then((doc) =>{
+        res.send(doc);
+    }, (err) =>{
+        res.status(400).send(err);
+    });
 });
 
 
-anotherTodo.save().then((doc) => {
-    console.log('Saved todo ', doc);
-},(e) =>{
-    console.log('Unable to save todo ', e)
+app.listen(3000, () => {
+    console.log('Server is up on 3000!')
 });
-
-// text : '' - will fail
-// text : '            ' - will also fail becuase of trim= true
-var secondTodo = new Todo({
-    text:'  Something to do   '
-});
-
-//text being a string property, if we try to assign a number or boolean it will save it without any error bcoz of implicit conversion to string type
-//will fail if we try to assign an object type
-var thirdTodo = new Todo({
-    text:true
-});
-
-
-// USER MODEL
-var User = mongoose.model('User',{
-    email:{
-        type:String,
-        required:true,
-        minlength:1,
-        trim:true
-    }
-});
-
-var firstUser = new User({
-    email:'neha@gmail.com   '
-});
-
-firstUser.save().then((doc) => {
-    console.log('Saved user ', doc);
-},(e) =>{
-    console.log('Unable to save user ', e)
-});
-
-
